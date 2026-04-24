@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Template {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  fileName    String
+  filePath    String
+  fileType    String
+  fields      String   // JSON: Array<{ name: string; placeholder: string }>
+  content     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  fills       Fill[]
+}
+
+model SourceDocument {
+  id        String         @id @default(cuid())
+  name      String
+  fileName  String
+  filePath  String
+  fileType  String
+  content   String
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  fills     FillDocument[]
+}
+
+model Fill {
+  id          String         @id @default(cuid())
+  templateId  String
+  template    Template       @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  status      String         @default("pending")
+  fieldValues String         @default("{}")
+  outputText  String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  documents   FillDocument[]
+}
+
+model FillDocument {
+  fillId     String
+  documentId String
+  fill       Fill           @relation(fields: [fillId], references: [id], onDelete: Cascade)
+  document   SourceDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@id([fillId, documentId])
+}
